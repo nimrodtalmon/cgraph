@@ -28,7 +28,7 @@ LOCK = threading.Lock()
 VENDOR = {"cytoscape.min.js", "dagre.min.js", "cytoscape-dagre.js"}
 
 TYPES = ["problem", "assumption", "model", "theorem", "algorithm",
-         "dataset", "experiment", "claim"]
+         "dataset", "experiment", "claim", "other"]
 
 # Labels an arc from one node type to another may carry ("builds on" always).
 SCHEMA = {
@@ -86,7 +86,8 @@ def init():
         CREATE INDEX IF NOT EXISTS nodes_g ON nodes(graph);
         CREATE INDEX IF NOT EXISTS arcs_g ON arcs(graph);
         """)
-        con.execute("INSERT OR IGNORE INTO graphs VALUES('main','Main graph',0,?)", (time.time(),))
+        con.execute("INSERT OR IGNORE INTO graphs VALUES('main','First graph',0,?)", (time.time(),))
+        con.execute("UPDATE graphs SET name='First graph' WHERE id='main' AND name='Main graph'")
     con.close()
 
 
@@ -251,6 +252,35 @@ def positions(con, gid, b):
     return {"ok": True}
 
 
+def list_graphs(con):
+    rows = con.execute("""SELECT g.id, g.name, g.sample, g.created,
+        (SELECT COUNT(*) FROM nodes n WHERE n.graph=g.id) AS nodes,
+        (SELECT COUNT(*) FROM arcs a WHERE a.graph=g.id) AS arcs
+        FROM graphs g ORDER BY g.created DESC LIMIT 500""").fetchall()
+    return [dict(r) for r in rows]
+
+
+def new_graph(con, b):
+    name = text(b.get("name") or "Untitled graph", "Name", 1, 60)
+    gid = "g-" + secrets.token_hex(4)
+    con.execute("INSERT INTO graphs VALUES(?,?,0,?)", (gid, name, time.time()))
+    return {"id": gid, "name": name}
+
+
+def rename_graph(con, gid, b):
+    get_graph(con, gid)
+    name = text(b.get("name"), "Name", 1, 60)
+    con.execute("UPDATE graphs SET name=? WHERE id=?", (name, gid))
+    return {"ok": True}
+
+
+def rename_curator(con, gid, cid, b):
+    check_key(con, gid, cid, b.get("key"))
+    name = text(b.get("name"), "Name", 1, 60)
+    con.execute("UPDATE curators SET name=? WHERE id=?", (name, cid))
+    return {"ok": True}
+
+
 # --- curating ------------------------------------------------------------------
 
 def add_curator(con, gid, b, key=None):
@@ -350,7 +380,7 @@ def export(con, gid, cid):
 # --- samples -------------------------------------------------------------------
 
 WEIGHTS = {"problem": 1, "assumption": 1.5, "model": 2, "theorem": 2, "algorithm": 1,
-           "dataset": 1, "experiment": 2, "claim": 1}
+           "dataset": 1, "experiment": 2, "claim": 1, "other": 0.3}
 NAMES = ["Ada", "Ben", "Chen", "Dana", "Eli", "Farah", "Gil", "Hana", "Ivo", "Jun"]
 
 
@@ -359,7 +389,7 @@ def sample(con, b):
     per = num(b.get("arcs"), 0, 3, 1.5)
     p = num(b.get("accept"), 0, 1, 0.5)
     gid = "s-" + secrets.token_hex(4)
-    con.execute("INSERT INTO graphs VALUES(?,?,1,?)", (gid, f"Sample · {n} nodes", time.time()))
+    con.execute("INSERT INTO graphs VALUES(?,?,1,?)", (gid, f"Sample ({n} nodes)", time.time()))
     rng = random.Random()
     types, counts, ids = [], {}, []
     now = time.time()
@@ -436,6 +466,8 @@ class Handler(BaseHTTPRequestHandler):
             with con:
                 if p == ["api", "sample"] and b is not None:
                     return sample(con, b)
+                if p == ["api", "graphs"]:
+                    return list_graphs(con) if b is None else new_graph(con, b)
                 if len(p) < 3 or p[1] != "g":
                     raise LookupError
                 gid, rest = p[2], p[3:]
@@ -457,6 +489,8 @@ class Handler(BaseHTTPRequestHandler):
                     return delete(con, gid, b)
                 if rest == ["positions"]:
                     return positions(con, gid, b)
+                if rest == ["rename"]:
+                    return rename_graph(con, gid, b)
                 if rest == ["curator"]:
                     return add_curator(con, gid, b)
                 if len(rest) == 3 and rest[0] == "curator":
@@ -468,6 +502,8 @@ class Handler(BaseHTTPRequestHandler):
                         return curate(con, gid, cid, b, act == "accept")
                     if act == "restore":
                         return restore(con, gid, cid, b)
+                    if act == "rename":
+                        return rename_curator(con, gid, cid, b)
                 raise LookupError
         finally:
             con.close()
