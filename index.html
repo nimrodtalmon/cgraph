@@ -118,7 +118,7 @@
   .err { color: #b23a2b; font-size: .88em; margin-top: .5em; }
   .ok { color: var(--m); font-size: .88em; margin-top: .5em; }
   .frontlist { display: flex; flex-wrap: wrap; gap: .35em; }
-  .fchip { border: 2px solid var(--cu); background: var(--tb); border-radius: 99px; padding: .15em .65em; font-size: .85em; font-weight: 550; }
+  .fchip { border: 2px solid #1f2328; background: var(--tb); border-radius: 99px; padding: .15em .65em; font-size: .85em; font-weight: 550; }
   .curs { display: flex; flex-direction: column; gap: .35em; }
   .curs button { text-align: left; border: 1px solid var(--line); background: var(--bg); border-radius: 9px; padding: .45em .7em; }
   .curs button:hover { border-color: var(--cu); }
@@ -254,7 +254,7 @@ function initCy() {
       { selector: "node.no", style: { "background-color": "#fff", "border-style": "dashed", "border-color": "#b9bcc1", color: "#8a8f96" } },
       { selector: "edge.no", style: { "line-style": "dashed", opacity: .45 } },
       { selector: "edge.acc", style: { "line-color": CU, "target-arrow-color": CU, width: 1.8 } },
-      { selector: "node.front", style: { "border-width": 3.5, "border-color": CU, "underlay-color": CU, "underlay-opacity": .18, "underlay-padding": 7, "underlay-shape": "round-rectangle" } },
+      { selector: "node.front", style: { "border-width": 3.2, "border-color": "#1f2328", "border-style": "solid", "underlay-color": "#1f2328", "underlay-opacity": .14, "underlay-padding": 6, "underlay-shape": "round-rectangle" } },
       { selector: "node.prev", style: { "border-color": CU, "border-width": 3, "border-style": "solid", color: "#1f2328" } },
       { selector: "edge.prev", style: { "line-color": CU, "target-arrow-color": CU, opacity: 1, width: 3 } },
       { selector: "node.prevrm", style: { "border-color": "#b23a2b", "border-width": 3, "border-style": "dashed" } },
@@ -665,7 +665,7 @@ function helpModal() {
     h("div", { class: "legend" },
       sw("model", { background: "#fff", border: "1.6px dashed #b9bcc1" }), h("span", {}, "not accepted (yet)"),
       sw("model"), h("span", {}, "accepted"),
-      sw("model", { border: `3.5px solid ${CU}`, boxShadow: "0 0 0 5px rgba(47,111,143,.18)" }), h("span", {}, h("b", {}, "front"), ": accepted, and nothing accepted builds on it yet")),
+      sw("model", { border: "3px solid #1f2328", boxShadow: "0 0 0 5px rgba(31,35,40,.14)" }), h("span", {}, h("b", {}, "front"), ": accepted, and nothing accepted builds on it yet")),
     h("p", { class: "muted" }, "Export a curator's front as JSON. To try things out without touching the main graph, generate a sample graph from the ⋯ menu."),
   ]);
 }
