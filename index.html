@@ -102,7 +102,22 @@
          padding: .28em .6em; border-radius: 7px; white-space: nowrap; transform: translate(12px, 14px); }
 
   /* right panel */
-  aside { width: 312px; flex: none; background: var(--card); border-left: 1px solid var(--line); overflow-y: auto; padding: 1em 1em 2em; }
+  aside { width: 316px; flex: none; background: var(--soft); border-left: 1px solid var(--line); overflow-y: auto; padding: .8em .8em 2em; }
+  .block { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: .85em .9em .9em; margin-bottom: .7em; box-shadow: 0 1px 2px rgba(0,0,0,.03); }
+  .block > h3:first-child { margin-top: 0; }
+  .bhead { display: flex; align-items: center; gap: .5em; margin-bottom: .6em; }
+  .bhead .bt { font-weight: 650; font-size: 1.02em; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .chipb { border: 1px solid var(--line); background: var(--soft); border-radius: 7px; padding: .18em .55em; font-size: .8em; color: var(--muted); }
+  .chipb:hover { color: var(--text); border-color: #c9c6bd; }
+  .sharebox { display: flex; gap: .4em; margin-top: .6em; }
+  .sharebox input { flex: 1; min-width: 0; font: inherit; font-size: .8em; border: 1px solid var(--line); border-radius: 7px; padding: .3em .45em; background: var(--soft); color: var(--muted); }
+  .viewbar { position: absolute; left: 12px; bottom: 12px; z-index: 3; display: flex; gap: 2px; background: var(--card); border: 1px solid var(--line);
+             border-radius: 10px; box-shadow: var(--shadow); padding: 3px; }
+  .tog { display: flex; align-items: center; gap: .45em; border: 0; background: none; padding: .3em .6em; border-radius: 7px; color: var(--muted); font-size: .84em; font-weight: 550; }
+  .tog:hover { background: var(--soft); }
+  .tog .sw2 { width: 26px; height: 15px; border-radius: 99px; background: #d5d3cc; position: relative; transition: background .18s; flex: none; }
+  .tog .sw2::after { content: ""; position: absolute; top: 2px; left: 2px; width: 11px; height: 11px; border-radius: 50%; background: #fff; transition: transform .18s; box-shadow: 0 1px 2px rgba(0,0,0,.25); }
+  .tog.on { color: var(--text); } .tog.on .sw2 { background: var(--m); } .tog.on .sw2::after { transform: translateX(11px); }
   @media (max-width: 820px) {
     main { flex-direction: column; } #stage { min-height: 60vh; } aside { width: auto; border-left: 0; border-top: 1px solid var(--line); }
     .user .nm { display: none; } .brand .bt { display: none; }
@@ -116,8 +131,6 @@
           transition: transform .12s, box-shadow .12s, border-color .12s, background .12s; }
   .type:hover { transform: translateY(-1px); box-shadow: var(--shadow); border-color: var(--tc); background: var(--tb); }
   .type:active { cursor: grabbing; }
-  .hint { font-size: .8em; color: var(--muted); margin-top: .6em; line-height: 1.5; }
-  .hint .dot { vertical-align: -1px; margin: 0 .1em; }
   .dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: var(--co); border: 2px solid #fff; box-shadow: 0 0 0 1px var(--co-soft); }
   .ghost { position: fixed; z-index: 50; pointer-events: none; display: flex; gap: .45em; align-items: center; padding: .35em .75em .35em .4em;
            border-radius: 10px; border: 2px solid var(--tc); background: #fff; box-shadow: 0 8px 24px rgba(0,0,0,.18);
@@ -203,7 +216,6 @@
   <button class="q" id="modeHelp" title="How this mode works">?</button>
   <div class="spacer"></div>
   <button class="user" id="userBtn" title="Your name"></button>
-  <button class="icon" id="menuBtn" title="View"><svg class="ic" width="18" height="18" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.8" fill="currentColor"/><circle cx="12" cy="12" r="1.8" fill="currentColor"/><circle cx="19" cy="12" r="1.8" fill="currentColor"/></svg></button>
 </header>
 <main>
   <div id="stage">
@@ -216,7 +228,10 @@
       <div class="zoom">
         <button id="zIn" title="Zoom in"><svg width="14" height="14" viewBox="0 0 14 14"><path d="M7 2v10M2 7h10" stroke="currentColor" stroke-width="1.8"/></svg></button>
         <button id="zOut" title="Zoom out"><svg width="14" height="14" viewBox="0 0 14 14"><path d="M2 7h10" stroke="currentColor" stroke-width="1.8"/></svg></button>
-        <button id="zFit" title="Fit"><svg width="14" height="14" viewBox="0 0 14 14"><path d="M1.5 5V1.5H5M9 1.5h3.5V5M12.5 9v3.5H9M5 12.5H1.5V9" stroke="currentColor" stroke-width="1.6" fill="none"/></svg></button>
+      </div>
+      <div class="viewbar">
+        <button class="tog" id="tTidy" title="Arrange the graph automatically"><span class="sw2"></span>Tidy</button>
+        <button class="tog" id="tFit" title="Keep the whole graph in view"><span class="sw2"></span>Fit</button>
       </div>
     </div>
   </div>
@@ -268,7 +283,8 @@ let GID = q0.get("g") || store.get("last", "main");
 const S = {
   mode: q0.get("mode") === "curate" ? "curate" : "contribute",
   g: null, graphs: [], sel: null, curId: q0.get("curator") ? +q0.get("curator") : null, cur: null,
-  undo: [], msg: null, busy: false, showKey: false, adding: false, renaming: null,
+  undo: [], msg: null, busy: false, showKey: false, adding: false, renaming: null, unlock: false, shared: null,
+  tidy: store.get("tidy", false), autofit: store.get("autofit", true),
 };
 const keyOf = id => (store.get("keys", {}))[GID + ":" + id];
 const tokenOf = (k, id) => (store.get("tokens", {}))[GID + ":" + k + id];
@@ -356,17 +372,45 @@ function initCy() {
   cy.on("mouseover", "edge", e => { if (S.mode === "curate") hoverCurate("a", +e.target.id().slice(1), e); });
   cy.on("mouseout", "node, edge", () => { if (S.mode === "curate") clearPreview(); else hideHandleSoon(); });
   cy.on("pan zoom drag position", () => { if (handleNode) placeHandle(handleNode); });
-  document.getElementById("zIn").onclick = () => cy.animate({ zoom: { level: cy.zoom() * 1.25, renderedPosition: { x: cy.width() / 2, y: cy.height() / 2 } }, duration: 150 });
-  document.getElementById("zOut").onclick = () => cy.animate({ zoom: { level: cy.zoom() / 1.25, renderedPosition: { x: cy.width() / 2, y: cy.height() / 2 } }, duration: 150 });
-  document.getElementById("zFit").onclick = fit;
+  let userPan = false;
+  cy.on("tapstart", e => { userPan = e.target === cy; });
+  cy.on("tapend", () => { userPan = false; });
+  cy.on("pan", () => { if (userPan) setAutofit(false); });
+  document.getElementById("cy").addEventListener("wheel", () => setAutofit(false), { passive: true });
+  document.getElementById("zIn").onclick = () => setAutofit(false) || cy.animate({ zoom: { level: cy.zoom() * 1.25, renderedPosition: { x: cy.width() / 2, y: cy.height() / 2 } }, duration: 150 });
+  document.getElementById("zOut").onclick = () => setAutofit(false) || cy.animate({ zoom: { level: cy.zoom() / 1.25, renderedPosition: { x: cy.width() / 2, y: cy.height() / 2 } }, duration: 150 });
+  document.getElementById("tTidy").onclick = () => setTidy(!S.tidy);
+  document.getElementById("tFit").onclick = () => setAutofit(!S.autofit);
+  paintToggles();
 }
-function fit() { if (cy.elements().length) cy.animate({ fit: { padding: 50 }, duration: 250, complete: () => { if (cy.zoom() > 1.3) cy.zoom(1.3); } }); }
+function paintToggles() {
+  document.getElementById("tTidy").classList.toggle("on", S.tidy);
+  document.getElementById("tFit").classList.toggle("on", S.autofit);
+}
+function setAutofit(v) { if (S.autofit === v) return; S.autofit = v; store.set("autofit", v); paintToggles(); if (v) fit(); }
+function setTidy(v) {
+  S.tidy = v; store.set("tidy", v); paintToggles(); paint();
+  if (v) layoutLocal();
+  else {
+    cy.nodes().forEach(el => { const n = N(+el.id().slice(1)); if (n && n.x !== null) el.animate({ position: { x: n.x, y: n.y } }, { duration: 300 }); });
+    if (S.autofit) setTimeout(fit, 320);
+  }
+}
+function layoutLocal() {
+  const l = cy.layout({ name: "dagre", rankDir: "TB", nodeSep: 34, rankSep: 70, edgeSep: 12, fit: false, animate: true, animationDuration: 300 });
+  l.on("layoutstop", () => { if (S.autofit) fit(); });
+  l.run();
+}
+let structSig = "";
+function fit() {
+  if (!cy.elements().length) return;
+  cy.stop(); cy.animate({ fit: { padding: 50 }, duration: 250, complete: () => { if (cy.zoom() > 1.3) { cy.zoom(1.3); cy.center(); } } });
+}
 function sync() {
   const g = S.g;
   const empty = document.getElementById("empty");
   empty.hidden = g.nodes.length > 0;
-  empty.replaceChildren(h("div", { class: "big" }, "An empty graph"),
-    h("div", {}, S.mode === "contribute" ? "Drag a contribution type from the right onto the canvas." : "Nothing to curate yet. Switch to Contribute to add something."));
+  empty.replaceChildren(h("div", { class: "big" }, "Empty graph"));
   const want = new Set([...g.nodes.map(n => "n" + n.id), ...g.arcs.map(a => "a" + a.id)]);
   cy.batch(() => {
     cy.elements().forEach(el => { if (!want.has(el.id())) el.remove(); });
@@ -381,12 +425,16 @@ function sync() {
     for (const a of g.arcs) if (cy.$id("a" + a.id).empty())
       cy.add({ group: "edges", data: { id: "a" + a.id, source: "n" + a.src, target: "n" + a.dst, label: a.label } });
   });
+  const sig = g.nodes.map(n => n.id).join(",") + "|" + g.arcs.map(a => a.id).join(",");
+  const changed = sig !== structSig; structSig = sig;
   if (g.nodes.some(n => n.x === null)) tidy(true);
+  else if (S.tidy && changed) layoutLocal();
+  else if (changed && S.autofit) fit();
   paint();
 }
 function paint() {
   cy.elements().removeClass("acc no front");
-  cy.autoungrabify(S.mode === "curate");
+  cy.autoungrabify(S.mode === "curate" || S.tidy);
   if (S.mode === "curate" && S.cur) {
     const an = new Set(S.cur.nodes), aa = new Set(S.cur.arcs), fr = new Set(S.cur.front);
     cy.nodes().forEach(el => { const id = +el.id().slice(1); el.addClass(an.has(id) ? (fr.has(id) ? "acc front" : "acc") : "no"); });
@@ -396,9 +444,9 @@ function paint() {
   if (S.sel) cy.$id(S.sel.kind + S.sel.id).select();
 }
 function tidy(save) {
-  const l = cy.layout({ name: "dagre", rankDir: "TB", nodeSep: 34, rankSep: 70, edgeSep: 12, fit: true, padding: 50, animate: !save, animationDuration: 350 });
+  const l = cy.layout({ name: "dagre", rankDir: "TB", nodeSep: 34, rankSep: 70, edgeSep: 12, fit: false, animate: !save, animationDuration: 350 });
   l.on("layoutstop", () => {
-    if (cy.zoom() > 1.3) { cy.zoom(1.3); cy.center(); }
+    if (S.autofit) fit();
     api("positions", { pos: cy.nodes().map(n => ({ id: +n.id().slice(1), x: n.position("x"), y: n.position("y") })) })
       .then(() => { S.g.nodes.forEach(n => { const p = cy.$id("n" + n.id).position(); n.x = p.x; n.y = p.y; }); }).catch(() => {});
   });
@@ -450,7 +498,7 @@ async function switchGraph(gid) {
   if (gid === GID) return;
   GID = gid; store.set("last", gid); openTabs();
   S.sel = null; S.cur = null; S.curId = null; S.undo = []; S.msg = null; closePop();
-  cy.elements().remove(); setUrl();
+  cy.elements().remove(); structSig = ""; setUrl();
   try { await refresh(); fit(); } catch (e) { flash(e.message, true); }
   loadGraphs();
 }
@@ -606,7 +654,7 @@ function hoverCurate(kind, id, e) {
   const acc = isAcc(kind, id), eff = effect(kind, id, !acc), own = !!keyOf(S.curId);
   if (own) { const cls = acc ? "prevrm" : "prev"; eff.n.forEach(x => cy.$id("n" + x).addClass(cls)); eff.a.forEach(x => cy.$id("a" + x).addClass(cls)); }
   const extra = eff.n.length + eff.a.length - 1;
-  const txt = !own ? (acc ? "accepted" : "not accepted") : (acc ? "click to un-accept" : "click to accept") + (extra > 0 ? ` · ${extra} more` : "");
+  const txt = !own ? (acc ? "accepted" : "not accepted") : (acc ? "un-accept" : "accept") + (extra > 0 ? ` · ${acc ? "−" : "+"}${extra}` : "");
   const p = e.renderedPosition || e.target.renderedPosition();
   tipEl = h("div", { class: "tip", style: { left: p.x + "px", top: p.y + "px" } }, txt);
   document.getElementById("canvas").append(tipEl);
@@ -660,7 +708,7 @@ function details() {
     } else {
       body = [h("div", { class: "ctitle" }, n.title), n.content ? h("div", { class: "content" }, n.content) : null];
     }
-    return h("div", { class: "card", style: tvars(n.type) },
+    return h("div", { style: tvars(n.type) },
       h("div", { class: "head" }, badge(n.type, 20), h("span", { class: "tname" }, n.type)), body,
       out.length ? h("div", { class: "meta" }, "Builds on: ", out.map((a, i) => [i ? " · " : "", h("i", {}, a.label), " ", linkTo(a.dst)])) : null,
       inn.length ? h("div", { class: "meta" }, "Built on by: ", inn.map((a, i) => [i ? " · " : "", linkTo(a.src), " ", h("i", {}, a.label)])) : null,
@@ -668,7 +716,7 @@ function details() {
         n.accepts ? ` · accepted by ${n.accepts} curator${n.accepts > 1 ? "s" : ""}` : ""));
   }
   const a = A(S.sel.id), s = N(a.src), d = N(a.dst);
-  return h("div", { class: "card" },
+  return h("div", {},
     h("div", { class: "head" }, h("span", { class: "tname", style: { color: "#5f6368" } }, "arc")),
     h("div", { class: "ctitle" }, h("span", { style: { color: TYPE[s.type].c } }, nm(s)), " ", h("i", { style: { fontWeight: 500 } }, a.label), " ",
       h("span", { style: { color: TYPE[d.type].c } }, nm(d))),
@@ -683,42 +731,30 @@ async function removeIt(kind, id) {
 function center(id) { const el = cy.$id("n" + id); if (el.nonempty()) cy.animate({ center: { eles: el }, duration: 300 }); }
 function contributePanel() {
   return [
-    h("h3", {}, "Add a contribution"),
-    h("div", { class: "types" }, Object.keys(TYPE).map(t => {
-      const el = h("div", { class: "type", style: tvars(t), title: `Drag a ${t} onto the canvas` }, badge(t, 26), t);
-      el.addEventListener("pointerdown", e => startTypeDrag(e, t));
-      return el;
-    })),
-    h("div", { class: "hint" }, "Drag onto the canvas. To connect, drag a node's ", h("span", { class: "dot" }), " to what it builds on."),
-    S.sel ? [h("h3", {}, "Selected"), details()] : null,
+    h("div", { class: "block" },
+      h("h3", {}, "Add a contribution"),
+      h("div", { class: "types" }, Object.keys(TYPE).map(t => {
+        const el = h("div", { class: "type", style: tvars(t), title: `Drag a ${t} onto the canvas` }, badge(t, 26), t);
+        el.addEventListener("pointerdown", e => startTypeDrag(e, t));
+        return el;
+      }))),
+    S.sel ? h("div", { class: "block" }, h("h3", {}, "Selected"), details()) : null,
   ];
 }
 function curatorCard(c) {
   const own = !!keyOf(c.id), on = c.id === S.curId;
-  if (on && S.renaming === "cur") {
-    const inp = h("input", { class: "f", value: c.name, maxlength: 60 });
-    const done = async ok => {
-      S.renaming = null;
-      if (ok && inp.value.trim()) { try { await api(`curator/${c.id}/rename`, { key: keyOf(c.id), name: inp.value }); await refresh(); } catch (e) { flash(e.message, true); } }
-      render();
-    };
-    inp.addEventListener("keydown", e => { if (e.key === "Enter") done(true); if (e.key === "Escape") done(false); });
-    setTimeout(() => { inp.focus(); inp.select(); }, 0);
-    return h("div", { class: "cur on" }, h("span", { class: "ca" }, initial(c.name)), inp);
-  }
   return h("button", { class: "cur" + (on ? " on" : "") + (own ? "" : " view"), onclick: () => chooseCurator(on ? null : c.id) },
     h("span", { class: "ca" }, initial(c.name)), h("span", { class: "cn" }, c.name),
     own ? h("span", { class: "tag y" }, "yours") : h("span", { class: "tag n" }, "view"));
 }
 function curatePanel() {
-  const els = [h("h3", {}, "Curators")];
   const curs = S.g.curators;
   const list = h("div", { class: "curs" }, curs.map(curatorCard));
   if (S.adding) {
-    const inp = h("input", { class: "f", placeholder: "Name: a venue, a lab, a reading group…", maxlength: 60 });
+    const inp = h("input", { class: "f", placeholder: "Name, e.g. a venue or a lab", maxlength: 60 });
     const create = async () => {
       if (!inp.value.trim()) return;
-      try { const r = await api("curator", { name: inp.value }); putKey(GID, r.id, r.key); S.adding = false; S.showKey = false; await chooseCurator(r.id); }
+      try { const r = await api("curator", { name: inp.value }); putKey(GID, r.id, r.key); S.adding = false; await chooseCurator(r.id); }
       catch (e) { flash(e.message, true); }
     };
     inp.addEventListener("keydown", e => { if (e.key === "Enter") create(); if (e.key === "Escape") { S.adding = false; render(); } });
@@ -727,49 +763,97 @@ function curatePanel() {
   } else {
     list.append(h("button", { class: "cur add", onclick: () => { S.adding = true; render(); } }, h("span", { class: "ca" }, "+"), h("span", { class: "cn" }, "New curator")));
   }
-  els.push(list);
-  if (!S.curId) {
-    els.push(h("p", { class: "muted", style: { marginTop: "1em" } }, curs.length ? "Choose a curator to see what it accepted, or add your own." : "Add a curator, such as a venue or a lab, to start accepting contributions."));
-    return els;
-  }
-  const own = !!keyOf(S.curId), v = S.cur || { nodes: [], arcs: [], front: [] };
-  // curator actions
-  if (own) {
-    els.push(h("div", { class: "sub row" },
-      h("button", { class: "linkb", onclick: () => { S.renaming = "cur"; render(); } }, "Rename"), h("span", { class: "muted" }, "·"),
-      h("button", { class: "linkb", onclick: () => { S.showKey = !S.showKey; render(); } }, S.showKey ? "Hide key" : "Key"),
-      h("span", { class: "spacer" }),
-      h("button", { class: "btn sec", disabled: !S.undo.length, onclick: undo, title: S.undo.length ? "Undo: " + S.undo[S.undo.length - 1].what : "Nothing to undo" }, "↶ Undo")));
-    if (S.showKey) els.push(h("div", { class: "muted", style: { marginTop: ".4em" } }, "To curate from another browser: ", h("code", {}, keyOf(S.curId))));
-  } else {
-    const ki = h("input", { class: "f", placeholder: "Curator key, to curate" });
-    els.push(h("div", { class: "sub row" }, ki, h("button", { class: "btn", onclick: async () => {
-      try { await api(`curator/${S.curId}/check`, { key: ki.value.trim() }); putKey(GID, S.curId, ki.value.trim()); render(); renderTabs(); }
-      catch (e) { flash(e.message, true); } } }, "Use")));
-  }
-  els.push(h("div", { class: "stats", style: { marginTop: ".9em" } },
-    h("div", { class: "stat" }, h("b", { style: { color: CU } }, v.nodes.length + v.arcs.length), h("span", {}, `accepted of ${S.g.nodes.length + S.g.arcs.length}`)),
-    h("div", { class: "stat" }, h("b", {}, v.front.length), h("span", {}, "on the front"))));
-  els.push(h("h3", {}, "Front"),
+  const els = [h("div", { class: "block" }, h("h3", {}, "Curators"), list)];
+  if (!S.curId || !S.cur) return els;
+
+  const own = !!keyOf(S.curId), v = S.cur;
+  // the chosen curator
+  let title;
+  if (S.renaming === "cur") {
+    const inp = h("input", { class: "f", value: v.name, maxlength: 60 });
+    const done = async ok => {
+      S.renaming = null;
+      if (ok && inp.value.trim()) { try { await api(`curator/${S.curId}/rename`, { key: keyOf(S.curId), name: inp.value }); await refresh(); } catch (e) { flash(e.message, true); } }
+      render();
+    };
+    inp.addEventListener("keydown", e => { if (e.key === "Enter") done(true); if (e.key === "Escape") done(false); });
+    setTimeout(() => { inp.focus(); inp.select(); }, 0);
+    title = inp;
+  } else title = h("span", { class: "bt" }, v.name);
+  const head = h("div", { class: "bhead" }, title,
+    own && S.renaming !== "cur" ? [h("button", { class: "chipb", onclick: () => { S.renaming = "cur"; render(); } }, "Rename"),
+                                   h("button", { class: "chipb", onclick: () => { S.showKey = !S.showKey; render(); } }, "Key")] : null,
+    !own ? h("button", { class: "chipb", onclick: () => { S.unlock = !S.unlock; render(); } }, "Unlock") : null);
+  const curBlock = h("div", { class: "block" }, head,
+    own && S.showKey ? h("div", { class: "muted", style: { margin: "-.2em 0 .6em" } }, h("code", {}, keyOf(S.curId))) : null,
+    !own && S.unlock ? (() => {
+      const ki = h("input", { class: "f", placeholder: "Curator key" });
+      const go = async () => { try { await api(`curator/${S.curId}/check`, { key: ki.value.trim() }); putKey(GID, S.curId, ki.value.trim()); S.unlock = false; render(); } catch (e) { flash(e.message, true); } };
+      ki.addEventListener("keydown", e => { if (e.key === "Enter") go(); });
+      setTimeout(() => ki.focus(), 0);
+      return h("div", { class: "row", style: { marginBottom: ".6em" } }, ki, h("button", { class: "btn", onclick: go }, "OK"));
+    })() : null,
+    h("div", { class: "stats" },
+      h("div", { class: "stat" }, h("b", { style: { color: CU } }, v.nodes.length + v.arcs.length), h("span", {}, `accepted of ${S.g.nodes.length + S.g.arcs.length}`)),
+      h("div", { class: "stat" }, h("b", {}, v.front.length), h("span", {}, "on the front"))),
+    own ? h("div", { class: "row", style: { marginTop: ".6em" } },
+      h("button", { class: "btn sec", disabled: !S.undo.length, onclick: undo, title: S.undo.length ? "Undo: " + S.undo[S.undo.length - 1].what : "" }, "↶ Undo"),
+      h("span", { class: "muted", style: { overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" } }, S.undo.length ? S.undo[S.undo.length - 1].what : "")) : null);
+  els.push(curBlock);
+
+  // the front, and sharing it
+  const shareBtn = h("button", { class: "btn", onclick: shareLink }, S.shared ? "✓ Link copied" : "Share link");
+  const exportBtn = h("button", { class: "btn sec", onclick: e => { e.stopPropagation(); const r = e.currentTarget.getBoundingClientRect();
+    menu(r.left, r.bottom + 4, [["PDF report", exportPDF], ["Image (PNG)", exportPNG], ["Data (JSON)", exportJSON]]); } }, "Export ▾");
+  els.push(h("div", { class: "block" },
+    h("h3", {}, "Front"),
     v.front.length ? h("div", { class: "frontlist" }, v.front.map(id => { const n = N(id); return n ? h("button", { class: "fchip",
-      onclick: () => { center(id); select("n", id); } }, badge(n.type, 18), n.title) : null; }))
-      : h("div", { class: "muted" }, own ? "Nothing accepted yet. Click a node to accept it." : "Nothing accepted yet."),
-    h("div", { class: "row", style: { marginTop: ".9em" } },
-      h("a", { class: "btn", href: `api/g/${GID}/curator/${S.curId}/export` }, "Export front"),
-      h("button", { class: "btn sec", onclick: copyLink }, "Copy link")));
+      onclick: () => { center(id); select("n", id); } }, badge(n.type, 18), n.title) : null; })) : h("div", { class: "muted" }, "Empty"),
+    h("div", { class: "row", style: { marginTop: ".85em" } }, shareBtn, exportBtn),
+    S.shared ? h("div", { class: "sharebox" }, h("input", { readonly: true, value: S.shared, onclick: e => e.target.select() })) : null));
+
   if (S.sel) {
     const acc = isAcc(S.sel.kind, S.sel.id);
-    els.push(h("h3", {}, "Selected", h("span", { class: "tag " + (acc ? "y" : "n") }, acc ? "accepted" : "not accepted")), details());
+    els.push(h("div", { class: "block" }, h("h3", {}, "Selected", h("span", { class: "tag " + (acc ? "y" : "n") }, acc ? "accepted" : "not accepted")), details()));
   }
   return els;
 }
-async function chooseCurator(id) {
-  S.curId = id; S.cur = null; S.undo = []; S.msg = null; S.showKey = false; S.renaming = null;
-  setUrl(); await refresh();
+async function shareLink() {
+  const u = new URL(location.href); u.searchParams.set("g", GID); u.searchParams.set("mode", "curate"); u.searchParams.set("curator", S.curId);
+  S.shared = u.toString();
+  try { await navigator.clipboard.writeText(S.shared); } catch (e) {}
+  render();
+  clearTimeout(shareLink.t); shareLink.t = setTimeout(() => { S.shared = null; render(); }, 6000);
 }
-async function copyLink() {
-  const u = new URL(location.href);
-  try { await navigator.clipboard.writeText(u.toString()); flash("Link copied."); } catch (e) { flash(u.toString()); }
+const esc = t => String(t).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+function graphPng() { return cy.png({ full: true, scale: 2, bg: "#ffffff", maxWidth: 2600, maxHeight: 2600 }); }
+function download(href, name) { const a = h("a", { href, download: name }); document.body.append(a); a.click(); a.remove(); }
+function exportPNG() { download(graphPng(), `front-${S.cur.name.replace(/\W+/g, "-")}.png`); }
+function exportJSON() { download(`api/g/${GID}/curator/${S.curId}/export`, `front-${S.curId}.json`); }
+function exportPDF() {
+  const w = window.open("", "_blank");
+  if (!w) { flash("Allow pop-ups to export a PDF.", true); return; }
+  const v = S.cur, gname = S.g.graph.name, png = graphPng();
+  const row = n => `<tr><td><span class="t" style="color:${TYPE[n.type].c}">${esc(n.type)}</span></td><td><b>${esc(n.title)}</b>${n.content ? `<div class="c">${esc(n.content)}</div>` : ""}</td><td>${esc(n.author)}</td></tr>`;
+  const front = v.front.map(N).filter(Boolean), acc = v.nodes.map(N).filter(Boolean);
+  const arcs = v.arcs.map(A).filter(Boolean).map(a => `<li>${esc(nm(N(a.src)))} <i>${esc(a.label)}</i> ${esc(nm(N(a.dst)))} <span class="m">· ${esc(a.author)}</span></li>`).join("");
+  w.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>${esc(v.name)} · front</title><style>
+    body{font:13px/1.45 system-ui,-apple-system,Segoe UI,sans-serif;color:#1f2328;margin:28px 34px}
+    h1{font-size:20px;margin:0}.sub{color:#6b6f76;margin:.2em 0 1.2em}h2{font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:#6b6f76;margin:1.6em 0 .5em}
+    img{max-width:100%;border:1px solid #e3e1da;border-radius:10px}table{border-collapse:collapse;width:100%}td{border-top:1px solid #e3e1da;padding:.45em .5em;vertical-align:top}
+    .t{font-size:11px;font-weight:650;text-transform:uppercase;letter-spacing:.06em}.c{color:#444;white-space:pre-wrap;margin-top:.2em}.m{color:#6b6f76}ul{padding-left:1.2em}
+    @media print{body{margin:0}}</style></head><body>
+    <h1>${esc(v.name)}</h1><div class="sub">Front in “${esc(gname)}” · ${new Date().toLocaleDateString()} · ${acc.length} accepted nodes, ${v.arcs.length} accepted arcs</div>
+    <img src="${png}">
+    <h2>Front</h2><table>${front.map(row).join("") || "<tr><td>Empty</td></tr>"}</table>
+    <h2>All accepted nodes</h2><table>${acc.map(row).join("")}</table>
+    <h2>Accepted arcs</h2><ul>${arcs || "<li>None</li>"}</ul>
+    <script>window.onload=()=>setTimeout(()=>window.print(),300)<\/script></body></html>`);
+  w.document.close();
+}
+async function chooseCurator(id) {
+  S.curId = id; S.cur = null; S.undo = []; S.msg = null; S.showKey = false; S.renaming = null; S.unlock = false; S.shared = null;
+  setUrl(); await refresh();
 }
 
 // ---------- modals ----------
@@ -805,7 +889,7 @@ function helpModal() {
       h("b", {}, "contribution"), ", credited to whoever added it."),
     h("p", {}, h("b", { style: { color: CO } }, "Contribute"), " to add nodes and arcs; ", h("b", { style: { color: CU } }, "Curate"),
       " to accept them as a curator, such as a venue or a lab. A curator's ", h("b", {}, "front"), " is what it accepted that nothing it accepted builds on yet."),
-    h("p", { class: "muted" }, "Each tab is a graph. Use + to start a new graph, open an existing one, or generate a sample to play with."),
+    h("p", { class: "muted" }, "Each tab is a graph; + starts a new one, opens an existing one, or generates a sample. On the canvas, Tidy arranges the graph automatically and Fit keeps all of it in view."),
   ]);
 }
 function modeHelp() {
@@ -825,7 +909,7 @@ function modeHelp() {
       sw("model", { background: "#fff", border: "1.5px dashed #b9bcc1" }), h("span", {}, "not accepted (yet)"),
       sw("model"), h("span", {}, "accepted"),
       sw("model", { border: "3px solid #1f2328", boxShadow: "0 0 0 5px rgba(31,35,40,.13)" }), h("span", {}, h("b", {}, "front"), ": accepted, and nothing accepted builds on it yet")),
-    h("p", { class: "muted" }, "Export the front as JSON. Ctrl-Z undoes."),
+    h("p", { class: "muted" }, "Share a link to the curator's view, or export its front as a PDF report, an image, or data. Ctrl-Z undoes."),
   ]);
 }
 function sampleModal() {
@@ -870,10 +954,6 @@ document.getElementById("mCurate").onclick = () => setMode("curate");
 document.getElementById("helpBtn").onclick = helpModal;
 document.getElementById("modeHelp").onclick = modeHelp;
 document.getElementById("userBtn").onclick = () => ensureName(true);
-document.getElementById("menuBtn").onclick = e => {
-  e.stopPropagation(); const r = e.currentTarget.getBoundingClientRect();
-  menu(r.right - 220, r.bottom + 6, [["Tidy up the layout", () => tidy(false)], ["Fit to screen", fit], "-", ["What is this?", helpModal]]);
-};
 document.addEventListener("click", e => { if (menuEl && !menuEl.contains(e.target)) closeMenu(); });
 document.addEventListener("keydown", e => {
   if (e.key === "Escape") { closePop(); closeMenu(); }
